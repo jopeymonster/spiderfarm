@@ -1,3 +1,4 @@
+# spiderfarm/helpers.py
 from urllib.parse import urljoin, urlparse
 import json
 import pydoc
@@ -13,31 +14,32 @@ info_message = ("\nWelcome to the Link Spider by JDT using scrapy!\n"
                 "Content tags (div & span) can be used as targeting options as well.\n"
                 "This spider has an option for crawling depth (default is 2, infinity is 0), which allows it to follow links up to the depth specified.\n")
 
-# exceptions wrapper
-def handle_exceptions(func):
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except ValueError as e:
-            print_error(func.__name__, e)
-        except KeyboardInterrupt as e:
-            print_error(func.__name__, e)
-        except FileNotFoundError as e:
-            print_error(func.__name__, e)
-        except AttributeError as e:
-            print_error(func.__name__, )
-        except Exception as e:
-            print_error(func.__name__, e)
-    def print_error(func_name, error):
-        print(f"\nError in function '{func_name}': {repr(error)} - Exiting...\n")
-    return wrapper
 
-# validate URL
-def is_valid_url(url):
-    if not url or not url.startswith(('http://', 'https://')):
-        return
-    result = urlparse(url)
-    return all([result.scheme, result.netloc])
+# URL validation
+def validate_and_normalize_url(url):
+    """
+    Validate and normalize URLs to reduce duplicates.
+    """
+    if not url:
+        return None
+    parsed = urlparse(url)
+    if parsed.scheme not in ('http', 'https') or not parsed.netloc:
+        return None
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+# xpath conversion
+def get_container_xpath(obj):
+    """
+    Converts a selector into xpath
+    """
+    if '.' in obj.ctag:
+        tag, classname = obj.ctag.split('.',1)
+        return f'//{tag}[contains(@class,"{classname}")]'
+    elif '#' in obj.ctag:
+        tag, idname = obj.ctag.split('#',1)
+        return f'//{tag}[@id="{idname}"]'
+    else:
+        return f'//{obj.ctag}'
 
 # generate timestamp
 def generate_timestamp():

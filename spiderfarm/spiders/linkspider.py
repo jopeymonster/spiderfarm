@@ -1,7 +1,8 @@
 # spiderfarm/spiderfarm/spiders/linkspider.py
 import scrapy
-from urllib.parse import urljoin, urlparse
 from collections import defaultdict
+from urllib.parse import urljoin, urlparse
+import helpers
 
 class LinkSpider(scrapy.Spider):
     name = 'linkspider'
@@ -34,7 +35,7 @@ class LinkSpider(scrapy.Spider):
         }
         # scoped container tag handling
         if self.ctag:
-            container_xpath = self.get_container_xpath()
+            container_xpath = helpers.get_container_xpath(self)
             elements = response.xpath(f'{container_xpath}//{self.tag}[@{self.attr}]')
         else:
             elements = response.xpath(f'//{self.tag}[@{self.attr}]')
@@ -44,28 +45,9 @@ class LinkSpider(scrapy.Spider):
             if not link:
                 continue
             absolute_url = urljoin(response.url, link)
-            normalized_url = self.normalize_url(absolute_url)
+            normalized_url = helpers.validate_and_normalize_url(absolute_url)
+            if not normalized_url: # skip invalid or non-http(s) URLs
+                continue
             if source in self.url_seen[normalized_url]:
                 continue
             yield response.follow(normalized_url, callback=self.parse, headers={'Referer': url})
-
-    def get_container_xpath(self):
-        """
-        Converts a selector into xpath
-        """
-        if '.' in self.ctag:
-            tag, classname = self.ctag.split('.',1)
-            return f'//{tag}[contains(@class,"{classname}")]'
-        elif '#' in self.ctag:
-            tag, idname = self.ctag.split('#',1)
-            return f'//{tag}[@id="{idname}"]'
-        else:
-            return f'//{self.ctag}'
-
-    def normalize_url(self, url):
-        """
-        Normalize URLs to reduce duplicates.
-        Could be enhanced to ignore tracking parameters, etc.
-        """
-        parsed = urlparse(url)
-        return parsed.scheme + "://" + parsed.netloc + parsed.path

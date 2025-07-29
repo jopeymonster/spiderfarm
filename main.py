@@ -1,4 +1,4 @@
-# main.py
+# spiderfarm/main.py
 import argparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
@@ -32,7 +32,7 @@ def main():
     if args.url is None:
         init_menu(args, spider_class)
     else:
-        if not helpers.is_valid_url(args.url):
+        if not helpers.validate_and_normalize_url(args.url):
             print("Invalid URL - please enter a valid URL starting with http:// or https://")
             return
         process_crawl(settings, spider_class, args.url, args.tag, args.attr, args.ctag)
@@ -47,7 +47,7 @@ def init_menu(args, spider_class):
     log_level = args.log.upper()
     print(helpers.info_message)
     url_input = input("Enter the starting URL: ").strip()
-    if not helpers.is_valid_url(url_input):
+    if not helpers.validate_and_normalize_url(url_input):
         print("Invalid URL - please enter a valid URL starting with http:// or https://")
         return
     if not ctag:
