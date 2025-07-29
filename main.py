@@ -1,0 +1,111 @@
+# main.py
+import argparse
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
+from spiderfarm.spiders.linkspider import LinkSpider
+import helpers
+
+def main():
+    spider_class = LinkSpider
+    parser = argparse.ArgumentParser(description="Recursive Link Spider with Scrapy by JDT")
+    parser.add_argument('--url', default=None, help='Starting URL to crawl')
+    parser.add_argument('--tag', default='a', help='HTML tag to search for links (default: "a")')
+    parser.add_argument('--attr', default='href', help='Attribute containing the link (default: "href")')
+    parser.add_argument('--ctag', default=None, help='Optional container tag with class or ID (e.g. div.article)')
+    parser.add_argument('--depth', type=int, default=2, help='Crawl depth limit (0 means unlimited, default is 2)')
+    parser.add_argument('--log', default='INFO', help='Logging level (default: INFO)') # opts: NONE, DEBUG, INFO, WARNING, ERROR, CRITICAL
+    args = parser.parse_args()
+    depth = args.depth
+    if depth < 0 and depth.isdigit():
+        print("Invalid depth - please enter a non-negative integer.")
+        return
+    # crawler settings
+    settings = get_project_settings()
+    settings.set('DEPTH_LIMIT', depth)
+    if args.log.upper() in ['DEBUG','INFO','WARNING','ERROR','CRITICAL']:
+        settings.set('LOG_ENABLED', True)
+        settings.set('LOG_LEVEL', args.log.upper())
+    elif args.log.upper() == 'NONE':
+        settings.set('LOG_ENABLED', False)
+    else:
+        raise ValueError(f"Invalid log level: {args.log}. Use NONE, DEBUG, INFO, WARNING, ERROR, or CRITICAL.")
+    if args.url is None:
+        init_menu(args, spider_class)
+    else:
+        if not helpers.is_valid_url(args.url):
+            print("Invalid URL - please enter a valid URL starting with http:// or https://")
+            return
+        process_crawl(settings, spider_class, args.url, args.tag, args.attr, args.ctag)
+
+def init_menu(args, spider_class):
+    settings = get_project_settings()
+    # pass default link tag+attr values for link crawling only
+    tag = args.tag # default 'a'
+    attr = args.attr # default 'href'
+    ctag = args.ctag # content tag target class or ID, format must be 'div.<class>' for classes or 'div#<ID>' for IDs (<div> or <span> tags)
+    depth = args.depth
+    log_level = args.log.upper()
+    print(helpers.info_message)
+    url_input = input("Enter the starting URL: ").strip()
+    if not helpers.is_valid_url(url_input):
+        print("Invalid URL - please enter a valid URL starting with http:// or https://")
+        return
+    if not ctag:
+        ctag_input = input("Enter the content container tag (e.g., 'div.class' or 'div#id') [optional]: ").strip()
+        if ctag_input:
+            if '.' in ctag_input or '#' in ctag_input:
+                ctag = ctag_input
+            else:
+                print("Invalid format. Use 'div.class' or 'div#id'. Skipping.")
+                ctag = None
+    if depth < 0:
+        print("Invalid depth - please enter a non-negative integer.")
+    if depth == 2:
+        print("Crawl depth is set to default at 2.")
+        depth_input = int(input("Please enter a different value now or leave it blank to continue with default of 2, (0 for infinite depth/max site crawl): ").strip())
+        if depth_input is not None and depth_input > 0:
+            depth = int(depth_input)
+        elif depth_input == '0':
+            depth = 0
+        else:
+            print("Invalid depth - please enter a positive integer or 0 for infinite depth (max site crawl).")
+    if log_level == 'INFO':
+        print("Log level is set to default at INFO.")
+        log_input = input("Please enter a different value now or leave it blank to continue with default, (NONE, DEBUG, WARNING, ERROR, CRITICAL): ").strip().upper()
+        if log_input in ['NONE','DEBUG', 'WARNING', 'ERROR', 'CRITICAL']:
+            log_level = log_input
+        else:
+            print(f"Invalid log level: {log_input} - please enter NONE, DEBUG, INFO, WARNING, ERROR, or CRITICAL.")
+    settings.set('DEPTH_LIMIT', depth)
+    if log_level == 'NONE':
+        settings.set('LOG_ENABLED', False)
+    else:
+        settings.set('LOG_ENABLED', True)
+        settings.set('LOG_LEVEL', log_level)
+    print(f"\nSettings for the crawl:\n"
+          f"Start URL: {url_input}\n" # start_url for 'process_crawl()
+          #f"Tag: {tag}\n"
+          #f"Attribute: {attr}\n"
+          f"Container Tag: {ctag}\n"
+          f"Crawl Depth: {depth}\n"
+          f"Log Level: {log_level}\n")
+    input("Press Enter to start the crawl with the above settings...")
+    process_crawl(settings, spider_class, url_input, tag, attr, ctag)
+
+def process_crawl(settings, spider_class, start_url, tag, attr, ctag):
+    """
+    Process the crawl with the given settings and spider parameters.
+    """
+    print("Executing crawl...")
+    process = CrawlerProcess(settings)
+    process.crawl(
+        spider_class,
+        start_url=start_url,
+        tag=tag,
+        attr=attr,
+        ctag=ctag,
+    )
+    process.start()
+
+if __name__ == '__main__':
+    main()
