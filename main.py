@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # spiderfarm/main.py
 import argparse
 from scrapy.crawler import CrawlerProcess
@@ -42,7 +43,7 @@ def init_menu(args, spider_class):
     # pass default link tag+attr values for link crawling only
     tag = args.tag # default 'a'
     attr = args.attr # default 'href'
-    ctag = args.ctag # content tag target class or ID, format must be 'div.<class>' for classes or 'div#<ID>' for IDs (<div> or <span> tags)
+    ctag = args.ctag # content tag target class or ID, format must be 'div.<class>' for classes or 'div#<ID>' for IDs, <div> or <span> tags
     depth = args.depth
     log_level = args.log.upper()
     print(helpers.info_message)
@@ -83,7 +84,7 @@ def init_menu(args, spider_class):
         settings.set('LOG_ENABLED', True)
         settings.set('LOG_LEVEL', log_level)
     print(f"\nSettings for the crawl:\n"
-          f"Start URL: {url_input}\n" # start_url for 'process_crawl()
+          f"Start URL: {url_input}\n" # start_url for 'process_crawl()'
           #f"Tag: {tag}\n"
           #f"Attribute: {attr}\n"
           f"Container Tag: {ctag}\n"
@@ -97,6 +98,12 @@ def process_crawl(settings, spider_class, start_url, tag, attr, ctag):
     Process the crawl with the given settings and spider parameters.
     """
     print("Executing crawl...")
+    if start_url and ctag:
+        settings.set('AUTO_SAVE',True)
+        settings.set('AUTO_VIEW',True)
+    else:
+        settings.set('AUTO_SAVE',False)
+        settings.set('AUTO_VIEW',False)
     process = CrawlerProcess(settings)
     process.crawl(
         spider_class,
