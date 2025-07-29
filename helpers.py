@@ -1,9 +1,6 @@
 from urllib.parse import urljoin, urlparse
-import time
-import sys
 import json
 import pydoc
-import requests
 from datetime import datetime
 from tabulate import tabulate
 
