@@ -6,40 +6,6 @@ from scrapy.utils.project import get_project_settings
 from spiderfarm.spiders.linkspider import LinkSpider
 import helpers
 
-def main():
-    spider_class = LinkSpider
-    parser = argparse.ArgumentParser(description="Recursive Link Spider with Scrapy by JDT")
-    parser.add_argument('--url', default=None, help='Starting URL to crawl')
-    parser.add_argument('--tag', default='a', help='HTML tag to search for links (default: "a")')
-    parser.add_argument('--attr', default='href', help='Attribute containing the link (default: "href")')
-    parser.add_argument('--ctag', default=None, help='Optional container tag with class or ID (e.g. div.article)')
-    parser.add_argument('--depth', type=int, default=2, help='Crawl depth limit (0 means unlimited, default is 2)')
-    parser.add_argument('--log', default='INFO', help='Logging level (default: INFO)') # opts: NONE, DEBUG, INFO, WARNING, ERROR, CRITICAL
-    parser.add_argument('--auto', choices=['save', 'view'], help="Auto output mode: 'save' to export CSV, 'view' to show table")
-    parser.add_argument('--output', default=None, help='Optional filename (without extension) for CSV output')
-    args = parser.parse_args()
-    depth = args.depth
-    if depth < 0 and depth.isdigit():
-        print("Invalid depth - please enter a non-negative integer.")
-        return
-    # crawler settings
-    settings = get_project_settings()
-    settings.set('DEPTH_LIMIT', depth)
-    if args.log.upper() in ['DEBUG','INFO','WARNING','ERROR','CRITICAL']:
-        settings.set('LOG_ENABLED', True)
-        settings.set('LOG_LEVEL', args.log.upper())
-    elif args.log.upper() == 'NONE':
-        settings.set('LOG_ENABLED', False)
-    else:
-        raise ValueError(f"Invalid log level: {args.log}. Use NONE, DEBUG, INFO, WARNING, ERROR, or CRITICAL.")
-    if args.url is None:
-        init_menu(args, spider_class)
-    else:
-        if not helpers.validate_and_normalize_url(args.url):
-            print("Invalid URL - please enter a valid URL starting with http:// or https://")
-            return
-        process_crawl(settings, spider_class, args.url, args.tag, args.attr, args.ctag, args.auto, args.output)
-
 def init_menu(args, spider_class):
     settings = get_project_settings()
     # pass default link tag+attr values for link crawling only
@@ -50,6 +16,7 @@ def init_menu(args, spider_class):
     log_level = args.log.upper()
     auto = args.auto
     output = args.output
+    exclude = args.exclude
     print(helpers.info_message)
     url_input = input("Enter the starting URL: ").strip()
     if not helpers.validate_and_normalize_url(url_input):
@@ -104,9 +71,9 @@ def init_menu(args, spider_class):
           f"Crawl Depth: {depth}\n"
           f"Log Level: {log_level}\n")
     input("Press Enter to start the crawl with the above settings...")
-    process_crawl(settings, spider_class, url_input, tag, attr, ctag, auto=auto, output=output)
+    process_crawl(settings, spider_class, url_input, tag, attr, ctag, auto=auto, output=output, exclude=exclude)
 
-def process_crawl(settings, spider_class, start_url, tag, attr, ctag, auto=None, output=None):
+def process_crawl(settings, spider_class, start_url, tag, attr, ctag, auto=None, output=None, exclude=None):
     """
     Process the crawl with the given settings and spider parameters.
     """
@@ -130,8 +97,44 @@ def process_crawl(settings, spider_class, start_url, tag, attr, ctag, auto=None,
         tag=tag,
         attr=attr,
         ctag=ctag,
+        exclude=exclude,
     )
     process.start()
+
+def main():
+    spider_class = LinkSpider
+    parser = argparse.ArgumentParser(description="Recursive Link Spider with Scrapy by JDT")
+    parser.add_argument('--url', default=None, help='Starting URL to crawl')
+    parser.add_argument('--tag', default='a', help='HTML tag to search for links (default: "a")')
+    parser.add_argument('--attr', default='href', help='Attribute containing the link (default: "href")')
+    parser.add_argument('--ctag', default=None, help='Optional container tag with class or ID (e.g. div.article)')
+    parser.add_argument('--depth', type=int, default=2, help='Crawl depth limit (0 means unlimited, default is 2)')
+    parser.add_argument('--log', default='INFO', help='Logging level (default: INFO)') # opts: NONE, DEBUG, INFO, WARNING, ERROR, CRITICAL
+    parser.add_argument('--auto', choices=['save', 'view'], help="Auto output mode: 'save' to export CSV, 'view' to show table")
+    parser.add_argument('--output', default=None, help='Optional filename (without extension) for CSV output')
+    parser.add_argument('--exclude', default=None, help='Exclude links that contain this substring (case-insensitive)')
+    args = parser.parse_args()
+    depth = args.depth
+    if depth < 0 and depth.isdigit():
+        print("Invalid depth - please enter a non-negative integer.")
+        return
+    # crawler settings
+    settings = get_project_settings()
+    settings.set('DEPTH_LIMIT', depth)
+    if args.log.upper() in ['DEBUG','INFO','WARNING','ERROR','CRITICAL']:
+        settings.set('LOG_ENABLED', True)
+        settings.set('LOG_LEVEL', args.log.upper())
+    elif args.log.upper() == 'NONE':
+        settings.set('LOG_ENABLED', False)
+    else:
+        raise ValueError(f"Invalid log level: {args.log}. Use NONE, DEBUG, INFO, WARNING, ERROR, or CRITICAL.")
+    if args.url is None:
+        init_menu(args, spider_class)
+    else:
+        if not helpers.validate_and_normalize_url(args.url):
+            print("Invalid URL - please enter a valid URL starting with http:// or https://")
+            return
+        process_crawl(settings, spider_class, args.url, args.tag, args.attr, args.ctag, args.auto, args.output, args.exclude)
 
 if __name__ == '__main__':
     main()

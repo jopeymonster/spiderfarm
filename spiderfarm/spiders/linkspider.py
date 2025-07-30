@@ -10,7 +10,7 @@ class LinkSpider(scrapy.Spider):
     custom_settings = {}
     handle_httpstatus_list = [404]
     
-    def __init__(self, start_url=None, tag='a', attr='href', ctag=None, *args, **kwargs):
+    def __init__(self, start_url=None, tag='a', attr='href', ctag=None, exclude=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_urls = [start_url]
         self.tag = tag
@@ -29,6 +29,7 @@ class LinkSpider(scrapy.Spider):
         '.docx', '.xls', '.xlsx', '.js', '.css', '.ico', '.zip', '.rar', 
         '.exe', '.mp4', '.mp3', '.avi', '.mov', '.wmv'
         )
+        self.exclude = exclude.lower() if exclude else None
     
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -65,6 +66,9 @@ class LinkSpider(scrapy.Spider):
         for element in elements:
             link = element.attrib.get(self.attr)
             if not link:
+                continue
+            if self.exclude and self.exclude in link.lower():
+                self.logger.debug(f"SKIPPED: {link} from {url} - Excluded by filter '{self.exclude}'")
                 continue
             # resolve and normalize url
             absolute_url = urljoin(response.url, link)
