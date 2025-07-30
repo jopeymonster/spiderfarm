@@ -55,6 +55,7 @@ def init_menu(args, spider_class):
     if not helpers.validate_and_normalize_url(url_input):
         print("Invalid URL - please enter a valid URL starting with http:// or https://")
         return
+    # target validation
     if not ctag:
         ctag_input = input("Enter the content container tag (e.g., 'div.class' or 'div#id') [optional]: ").strip()
         if ctag_input:
@@ -63,24 +64,32 @@ def init_menu(args, spider_class):
             else:
                 print("Invalid format. Use 'div.class' or 'div#id'. Skipping.")
                 ctag = None
+    # validate depth
     if depth < 0:
         print("Invalid depth - please enter a non-negative integer.")
+        return
     if depth == 2:
         print("Crawl depth is set to default at 2.")
-        depth_input = int(input("Please enter a different value now or leave it blank to continue with default of 2, (0 for infinite depth/max site crawl): ").strip())
-        if depth_input is not None and depth_input > 0:
-            depth = int(depth_input)
-        elif depth_input == '0':
-            depth = 0
-        else:
-            print("Invalid depth - please enter a positive integer or 0 for infinite depth (max site crawl).")
+        depth_input = input("Enter a new depth (0 for infinite, leave blank to keep default): ").strip()
+        if depth_input:
+            try:
+                depth_input_val = int(depth_input)
+                if depth_input_val < 0:
+                    print("Invalid depth - must be 0 or greater. Using default of 2.")
+                else:
+                    depth = depth_input_val
+            except ValueError:
+                print("Invalid input. Depth must be a number. Using default of 2.")
+    print(f"Crawl depth: {depth}")
+    # validate log level
     if log_level == 'INFO':
         print("Log level is set to default at INFO.")
         log_input = input("Please enter a different value now or leave it blank to continue with default, (NONE, DEBUG, WARNING, ERROR, CRITICAL): ").strip().upper()
-        if log_input in ['NONE','DEBUG', 'WARNING', 'ERROR', 'CRITICAL']:
-            log_level = log_input
-        else:
-            print(f"Invalid log level: {log_input} - please enter NONE, DEBUG, INFO, WARNING, ERROR, or CRITICAL.")
+        if log_input:
+            if log_input in ['NONE','DEBUG', 'WARNING', 'ERROR', 'CRITICAL']:
+                log_level = log_input
+            else: print(f"Invalid log level: {log_input} - please enter NONE, DEBUG, INFO, WARNING, ERROR, or CRITICAL.")
+        else: log_level = 'INFO'
     settings.set('DEPTH_LIMIT', depth)
     if log_level == 'NONE':
         settings.set('LOG_ENABLED', False)

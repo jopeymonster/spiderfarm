@@ -40,7 +40,7 @@ class LinkSpider(scrapy.Spider):
         url = response.url
         source = response.request.headers.get('Referer', b'[seed]').decode()
         if source in self.url_seen[url]:
-            self.logger.info(f"Duplicate {url} from same source {source} — Skipping")
+            self.logger.debug(f"SKIPPED: Duplicate {url} from same source {source}")
             return
         self.url_seen[url].add(source)
         self.logger.info(f"Processing: {url} / source: {source}")
@@ -69,18 +69,19 @@ class LinkSpider(scrapy.Spider):
             # resolve and normalize url
             absolute_url = urljoin(response.url, link)
             normalized_url = helpers.validate_and_normalize_url(absolute_url)
-            if not normalized_url: # skip invalid or non-https urls
-                self.logger.info(f"SKIPPED: {link} from {url} - Invalid or non-HTTPS URL")
+            # skip invalid or non-https urls
+            if not normalized_url:
+                self.logger.warning(f"SKIPPED: {link} from {url} - Invalid or non-HTTPS URL")
                 continue
             # skip non-HTML resources
             if any(normalized_url.lower().endswith(ext) for ext in self.NON_HTML_EXTENSIONS):
-                self.logger.info(f"SKIPPED: {normalized_url} - Non-HTML resource")
+                self.logger.debug(f"SKIPPED: {normalized_url} - Non-HTML resource")
                 continue
             # check domain scope
             parsed_url = urlparse(normalized_url)
             if self.allowed_domains:
                 if parsed_url.netloc not in self.allowed_domains:
-                    self.logger.info(f"SKIPPED: {normalized_url} - Not within domain scope")
+                    self.logger.debug(f"SKIPPED: {normalized_url} - Not within domain scope")
                     continue
             # skip duplicates
             if source in self.url_seen[normalized_url]:
@@ -92,7 +93,7 @@ class LinkSpider(scrapy.Spider):
                     headers={'Referer': url}
                     )
             except Exception as e:
-                self.logger.info(f"SKIPPED: {normalized_url} - Malformed URL or error: {str(e)}")
+                self.logger.error(f"SKIPPED: {normalized_url} - Malformed URL or error: {str(e)}")
 
     def spider_closed(self, spider):
         """
