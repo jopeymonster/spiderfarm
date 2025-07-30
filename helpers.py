@@ -141,7 +141,7 @@ def save_csv(table_data, headers, auto_save=False, output_filename=None, seed_ur
             writer = csv.writer(file)
             writer.writerow(headers)
             writer.writerows(table_data)
-        print(f"\nData saved to: {file_path}\n")
+        print(f"\nData saved to: {file_path} ({len(table_data)} rows)\n")
     except Exception as e:
         print(f"\nFailed to save file: {e}\n")
 

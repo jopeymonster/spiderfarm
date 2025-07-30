@@ -18,6 +18,17 @@ class LinkSpider(scrapy.Spider):
         self.ctag = ctag
         self.url_seen = defaultdict(set)  # url -> set of sources
         self.scraped_data = [] # list to store scraped data
+        if start_url:
+            parsed = urlparse(start_url)
+            domain = parsed.netloc
+            self.allowed_domains = [domain]
+            if domain.startswith('www.'):
+                self.allowed_domains.append(domain.replace('www.', ''))
+        self.NON_HTML_EXTENSIONS = (
+        '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.pdf', '.doc', 
+        '.docx', '.xls', '.xlsx', '.js', '.css', '.ico', '.zip', '.rar', 
+        '.exe', '.mp4', '.mp3', '.avi', '.mov', '.wmv'
+        )
     
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -55,13 +66,33 @@ class LinkSpider(scrapy.Spider):
             link = element.attrib.get(self.attr)
             if not link:
                 continue
+            # resolve and normalize url
             absolute_url = urljoin(response.url, link)
             normalized_url = helpers.validate_and_normalize_url(absolute_url)
-            if not normalized_url: # skip invalid or non-http(s) URLs
+            if not normalized_url: # skip invalid or non-https urls
+                self.logger.info(f"SKIPPED: {link} from {url} - Invalid or non-HTTPS URL")
                 continue
+            # skip non-HTML resources
+            if any(normalized_url.lower().endswith(ext) for ext in self.NON_HTML_EXTENSIONS):
+                self.logger.info(f"SKIPPED: {normalized_url} - Non-HTML resource")
+                continue
+            # check domain scope
+            parsed_url = urlparse(normalized_url)
+            if self.allowed_domains:
+                if parsed_url.netloc not in self.allowed_domains:
+                    self.logger.info(f"SKIPPED: {normalized_url} - Not within domain scope")
+                    continue
+            # skip duplicates
             if source in self.url_seen[normalized_url]:
                 continue
-            yield response.follow(normalized_url, callback=self.parse, headers={'Referer': url})
+            try:
+                yield response.follow(
+                    normalized_url, 
+                    callback=self.parse, 
+                    headers={'Referer': url}
+                    )
+            except Exception as e:
+                self.logger.info(f"SKIPPED: {normalized_url} - Malformed URL or error: {str(e)}")
 
     def spider_closed(self, spider):
         """
