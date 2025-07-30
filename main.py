@@ -15,6 +15,8 @@ def main():
     parser.add_argument('--ctag', default=None, help='Optional container tag with class or ID (e.g. div.article)')
     parser.add_argument('--depth', type=int, default=2, help='Crawl depth limit (0 means unlimited, default is 2)')
     parser.add_argument('--log', default='INFO', help='Logging level (default: INFO)') # opts: NONE, DEBUG, INFO, WARNING, ERROR, CRITICAL
+    parser.add_argument('--auto', choices=['save', 'view'], help="Auto output mode: 'save' to export CSV, 'view' to show table")
+    parser.add_argument('--output', default=None, help='Optional filename (without extension) for CSV output')
     args = parser.parse_args()
     depth = args.depth
     if depth < 0 and depth.isdigit():
@@ -36,7 +38,7 @@ def main():
         if not helpers.validate_and_normalize_url(args.url):
             print("Invalid URL - please enter a valid URL starting with http:// or https://")
             return
-        process_crawl(settings, spider_class, args.url, args.tag, args.attr, args.ctag)
+        process_crawl(settings, spider_class, args.url, args.tag, args.attr, args.ctag, args.auto, args.output)
 
 def init_menu(args, spider_class):
     settings = get_project_settings()
@@ -46,6 +48,8 @@ def init_menu(args, spider_class):
     ctag = args.ctag # content tag target class or ID, format must be 'div.<class>' for classes or 'div#<ID>' for IDs, <div> or <span> tags
     depth = args.depth
     log_level = args.log.upper()
+    auto = args.auto
+    output = args.output
     print(helpers.info_message)
     url_input = input("Enter the starting URL: ").strip()
     if not helpers.validate_and_normalize_url(url_input):
@@ -91,19 +95,25 @@ def init_menu(args, spider_class):
           f"Crawl Depth: {depth}\n"
           f"Log Level: {log_level}\n")
     input("Press Enter to start the crawl with the above settings...")
-    process_crawl(settings, spider_class, url_input, tag, attr, ctag)
+    process_crawl(settings, spider_class, url_input, tag, attr, ctag, auto=auto, output=output)
 
-def process_crawl(settings, spider_class, start_url, tag, attr, ctag):
+def process_crawl(settings, spider_class, start_url, tag, attr, ctag, auto=None, output=None):
     """
     Process the crawl with the given settings and spider parameters.
     """
     print("Executing crawl...")
-    if start_url and ctag:
+    # update settings
+    if auto == 'save':
         settings.set('AUTO_SAVE',True)
+        settings.set('AUTO_VIEW',False)
+    elif auto == 'view':
+        settings.set('AUTO_SAVE',False)
         settings.set('AUTO_VIEW',True)
     else:
         settings.set('AUTO_SAVE',False)
         settings.set('AUTO_VIEW',False)
+    if output:
+        settings.set('OUTPUT_FILENAME', output)
     process = CrawlerProcess(settings)
     process.crawl(
         spider_class,

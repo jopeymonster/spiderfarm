@@ -8,6 +8,7 @@ import helpers
 class LinkSpider(scrapy.Spider):
     name = 'linkspider'
     custom_settings = {}
+    handle_httpstatus_list = [404]
     
     def __init__(self, start_url=None, tag='a', attr='href', ctag=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -26,7 +27,7 @@ class LinkSpider(scrapy.Spider):
 
     def parse(self, response):
         url = response.url
-        source = response.request.headers.get('Referer', b'[entry]').decode()
+        source = response.request.headers.get('Referer', b'[seed]').decode()
         if source in self.url_seen[url]:
             self.logger.info(f"Duplicate {url} from same source {source} — Skipping")
             return
@@ -81,4 +82,12 @@ class LinkSpider(scrapy.Spider):
         ] for page_data in self.scraped_data]
         auto_view = self.settings.getbool('AUTO_VIEW',False)
         auto_save = self.settings.getbool('AUTO_SAVE',False)
-        helpers.data_handling_options(table_data, headers, auto_view=auto_view, auto_save=auto_save)
+        output_filename = self.settings.get('OUTPUT_FILENAME')
+        helpers.data_handling_options(
+            table_data, 
+            headers, 
+            auto_view=auto_view, 
+            auto_save=auto_save,
+            output_filename=output_filename,
+            seed_url=self.start_urls[0] if self.start_urls else None
+        )

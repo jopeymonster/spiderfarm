@@ -6,7 +6,7 @@ import re
 import pydoc
 from urllib.parse import urljoin, urlparse
 from pathlib import Path
-import json
+import os
 import pydoc
 from datetime import datetime
 from tabulate import tabulate
@@ -53,12 +53,12 @@ def generate_timestamp():
     return timestamp
 
 # data handling
-def data_handling_options(table_data, headers, auto_view=False, auto_save=False):
+def data_handling_options(table_data, headers, auto_view=False, auto_save=False, output_filename=None, seed_url=None):
     if not table_data or not headers:
         print("No table data or headers provided.")
         return
     if auto_save:
-        save_csv(table_data, headers, auto_save=True)
+        save_csv(table_data, headers, auto_save=True, output_filename=output_filename, seed_url=seed_url)
         return
     if auto_view:
         display_table(table_data, headers, auto_view=True)
@@ -69,7 +69,7 @@ def data_handling_options(table_data, headers, auto_view=False, auto_save=False)
     report_view = input("Choose 1 or 2 ('exit' to exit): ")
     if report_view == '1':
         # save to csv
-        save_csv(table_data, headers, auto_save=False)
+        save_csv(table_data, headers, auto_save=False, output_filename=output_filename, seed_url=seed_url)
     elif report_view == '2':
         # display table
         display_table(table_data, headers, auto_view=False)
@@ -92,35 +92,50 @@ def default_filename():
     print(f"Default file name: {default_file_name}")
     return default_file_name
 
-def filename_input():
+def filename_input(seed_url=None):
     """
-    Handles filename input for saving data.
+    Prompt user for filename and ensure .csv extension.
     """
-    default_file_name = default_filename()
+    default_file_name = generate_url_filename(seed_url)
     file_name_input = input("Enter a file name (or leave blank for default): ").strip()
     if file_name_input:
-        base_name = file_name_input.replace('.csv', '').strip()
-        safe_name = sanitize_filename(base_name)
+        base_name, _ = os.path.splitext(file_name_input)
+        safe_name = sanitize_filename(base_name.strip())
         if not safe_name:
             print("Invalid file name entered. Using default instead.")
-            file_name = default_file_name
-        else:
-            file_name = f"{safe_name}.csv"
+            return default_file_name
+        return f"{safe_name}.csv"
     else:
-        file_name = default_file_name
-    return file_name
+        return default_file_name
 
-def save_csv(table_data, headers, auto_save=False):
+def generate_url_filename(seed_url=None):
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    if seed_url:
+        parsed = urlparse(seed_url)
+        domain = parsed.netloc.replace('www.', '').replace('.', '_')
+        return f"linkspider_{domain}_{timestamp}.csv"
+    return f"linkspider_{timestamp}.csv"
+
+def save_csv(table_data, headers, auto_save=False, output_filename=None, seed_url=None):
     """
     Save the table data to a CSV file.
-    auto_save: If True, initiates the save process without prompting using the default file name, 'linkspider_{timestamp}.csv'.
+    - If output_filename is provided: sanitize it and force .csv
+    - If auto_save is True: use default filename
+    - Else: prompt the user
     """
-    if auto_save is True:
-        file_name = default_filename()
+    if output_filename:
+        base, _ = os.path.splitext(output_filename.strip())
+        safe_name = sanitize_filename(base)
+        if not safe_name:
+            print("Invalid output filename provided. Using default.")
+            file_name = generate_url_filename(seed_url=seed_url)
+        else:
+            file_name = f"{safe_name}.csv"
+    elif auto_save:
+        file_name = generate_url_filename(seed_url=seed_url)
     else:
-        file_name = filename_input()
-    home_dir = Path.home()
-    file_path = home_dir / file_name
+        file_name = filename_input(seed_url=seed_url)
+    file_path = Path.home() / file_name
     try:
         with open(file_path, mode='w', newline='') as file:
             writer = csv.writer(file)
