@@ -1,5 +1,5 @@
 # The Spider Farm
-![alt text](spiderfarm/spider_farm1.jpg "A rancher tends to his webcrawlers.")
+![alt text](/spider_farm1.jpg "A rancher tends to his webcrawlers.")
 
 ## Table of Contents
 - [Description](#description)
