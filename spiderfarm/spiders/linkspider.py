@@ -10,7 +10,7 @@ class LinkSpider(scrapy.Spider):
     custom_settings = {}
     handle_httpstatus_list = [404]
     
-    def __init__(self, start_url=None, tag='a', attr='href', ctag=None, exclude=None, *args, **kwargs):
+    def __init__(self, start_url=None, tag='a', attr='href', ctag=None, include=None, exclude=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_urls = [start_url]
         self.tag = tag
@@ -29,7 +29,8 @@ class LinkSpider(scrapy.Spider):
         '.docx', '.xls', '.xlsx', '.js', '.css', '.ico', '.zip', '.rar', 
         '.exe', '.mp4', '.mp3', '.avi', '.mov', '.wmv'
         )
-        self.exclude = exclude.lower() if exclude else None
+        self.include = include or []
+        self.exclude = exclude or []
     
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -44,7 +45,7 @@ class LinkSpider(scrapy.Spider):
             self.logger.debug(f"SKIPPED: Duplicate {url} from same source {source}")
             return
         self.url_seen[url].add(source)
-        self.logger.info(f"Processing: {url} / source: {source}")
+        self.logger.info(f"DISCOVERED: {url} / source: {source}")
         # page info extraction
         page_info = {
             'url': url,
@@ -67,7 +68,13 @@ class LinkSpider(scrapy.Spider):
             link = element.attrib.get(self.attr)
             if not link:
                 continue
-            if self.exclude and self.exclude in link.lower():
+            link_lower = link.lower()
+            # include filter
+            if self.include and not any(s in link_lower for s in self.include):
+                self.logger.debug(f"SKIPPED: {link} from {url} - Not included in filter '{self.include}'")
+                continue
+            #exclude filter
+            if self.exclude and not any(s in link_lower for s in self.exclude):
                 self.logger.debug(f"SKIPPED: {link} from {url} - Excluded by filter '{self.exclude}'")
                 continue
             # resolve and normalize url
@@ -75,7 +82,7 @@ class LinkSpider(scrapy.Spider):
             normalized_url = helpers.validate_and_normalize_url(absolute_url)
             # skip invalid or non-https urls
             if not normalized_url:
-                self.logger.warning(f"SKIPPED: {link} from {url} - Invalid or non-HTTPS URL")
+                self.logger.debug(f"SKIPPED: {link} from {url} - Invalid or non-HTTPS URL")
                 continue
             # skip non-HTML resources
             if any(normalized_url.lower().endswith(ext) for ext in self.NON_HTML_EXTENSIONS):
