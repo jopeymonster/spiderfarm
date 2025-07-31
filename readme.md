@@ -51,7 +51,7 @@ python main.py --url https://example.com \
                --exclude sale,outlet
 ```
 
-## Available CLI Options
+### Available CLI Options
 
 | Option      | Description                                                                   | Default      |
 | ----------- | ----------------------------------------------------------------------------- | ------------ |
