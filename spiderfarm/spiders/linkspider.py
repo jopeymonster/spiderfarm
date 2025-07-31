@@ -74,7 +74,7 @@ class LinkSpider(scrapy.Spider):
                 self.logger.debug(f"SKIPPED: {link} from {url} - Not included in filter '{self.include}'")
                 continue
             #exclude filter
-            if self.exclude and not any(s in link_lower for s in self.exclude):
+            if self.exclude and any(s in link_lower for s in self.exclude):
                 self.logger.debug(f"SKIPPED: {link} from {url} - Excluded by filter '{self.exclude}'")
                 continue
             # resolve and normalize url
