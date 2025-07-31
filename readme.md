@@ -5,7 +5,8 @@
 ## Table of Contents
 
 - [Description](#description)
-- [Third-Party Licenses](#third-party-licenses)
+- [Features](#features)
+- [Usage](#usage)
 - [License](#license)
 - [Contact](#contact)
 
@@ -50,7 +51,7 @@ python main.py --url https://example.com \
                --exclude sale,outlet
 ```
 
-### Available CLI Options
+## Available CLI Options
 
 | Option      | Description                                                                   | Default      |
 | ----------- | ----------------------------------------------------------------------------- | ------------ |
