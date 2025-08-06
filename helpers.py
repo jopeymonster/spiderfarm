@@ -11,6 +11,12 @@ import pydoc
 from datetime import datetime
 from tabulate import tabulate
 
+NON_HTML_EXTENSIONS = (
+        '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.pdf', '.doc', 
+        '.docx', '.xls', '.xlsx', '.js', '.css', '.ico', '.zip', '.rar', 
+        '.exe', '.mp4', '.mp3', '.avi', '.mov', '.wmv'
+        )
+
 info_message = ("\nWelcome to the Link Spider by JDT using scrapy!\n"
                 "\nUsage: python main.py [--url <start_url>] [--tag <tag>] [--attr <attribute>] [--ctag <container_tags] [--depth <crawl_depth>] [--log <log_level>]\n"
                 "\nExample: python main.py --url https://example.com --tag a --attr href --ctag div.article --depth 3 --log INFO\n"

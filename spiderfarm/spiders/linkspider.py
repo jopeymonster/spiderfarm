@@ -10,7 +10,9 @@ class LinkSpider(scrapy.Spider):
     custom_settings = {}
     handle_httpstatus_list = [404]
     
-    def __init__(self, start_url=None, tag='a', attr='href', ctag=None, include=None, exclude=None, *args, **kwargs):
+    def __init__(self, start_url=None, tag='a', attr='href', 
+                 ctag=None, include=None, exclude=None, crawl_enabled=True,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_urls = [start_url]
         self.tag = tag
@@ -24,13 +26,9 @@ class LinkSpider(scrapy.Spider):
             self.allowed_domains = [domain]
             if domain.startswith('www.'):
                 self.allowed_domains.append(domain.replace('www.', ''))
-        self.NON_HTML_EXTENSIONS = (
-        '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.pdf', '.doc', 
-        '.docx', '.xls', '.xlsx', '.js', '.css', '.ico', '.zip', '.rar', 
-        '.exe', '.mp4', '.mp3', '.avi', '.mov', '.wmv'
-        )
         self.include = include or []
         self.exclude = exclude or []
+        self.crawl_enabled = crawl_enabled
     
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -57,54 +55,56 @@ class LinkSpider(scrapy.Spider):
         }
         self.scraped_data.append(page_info)
         yield page_info
-        # scoped container tag handling
-        if self.ctag:
-            container_xpath = helpers.get_container_xpath(self)
-            elements = response.xpath(f'{container_xpath}//{self.tag}[@{self.attr}]')
-        else:
-            elements = response.xpath(f'//{self.tag}[@{self.attr}]')
-        # targeted links extraction
-        for element in elements:
-            link = element.attrib.get(self.attr)
-            if not link:
-                continue
-            link_lower = link.lower()
-            # include filter
-            if self.include and not any(s in link_lower for s in self.include):
-                self.logger.debug(f"SKIPPED: {link} from {url} - Not included in filter '{self.include}'")
-                continue
-            #exclude filter
-            if self.exclude and any(s in link_lower for s in self.exclude):
-                self.logger.debug(f"SKIPPED: {link} from {url} - Excluded by filter '{self.exclude}'")
-                continue
-            # resolve and normalize url
-            absolute_url = urljoin(response.url, link)
-            normalized_url = helpers.validate_and_normalize_url(absolute_url)
-            # skip invalid or non-https urls
-            if not normalized_url:
-                self.logger.debug(f"SKIPPED: {link} from {url} - Invalid or non-HTTPS URL")
-                continue
-            # skip non-HTML resources
-            if any(normalized_url.lower().endswith(ext) for ext in self.NON_HTML_EXTENSIONS):
-                self.logger.debug(f"SKIPPED: {normalized_url} - Non-HTML resource")
-                continue
-            # check domain scope
-            parsed_url = urlparse(normalized_url)
-            if self.allowed_domains:
-                if parsed_url.netloc not in self.allowed_domains:
-                    self.logger.debug(f"SKIPPED: {normalized_url} - Not within domain scope")
+        # crawl if enabled (True by default)
+        if self.crawl_enabled:
+            # scoped container tag handling
+            if self.ctag:
+                container_xpath = helpers.get_container_xpath(self)
+                elements = response.xpath(f'{container_xpath}//{self.tag}[@{self.attr}]')
+            else:
+                elements = response.xpath(f'//{self.tag}[@{self.attr}]')
+            # targeted links extraction
+            for element in elements:
+                link = element.attrib.get(self.attr)
+                if not link:
                     continue
-            # skip duplicates
-            if source in self.url_seen[normalized_url]:
-                continue
-            try:
-                yield response.follow(
-                    normalized_url, 
-                    callback=self.parse, 
-                    headers={'Referer': url}
-                    )
-            except Exception as e:
-                self.logger.error(f"SKIPPED: {normalized_url} - Malformed URL or error: {str(e)}")
+                link_lower = link.lower()
+                # include filter
+                if self.include and not any(s in link_lower for s in self.include):
+                    self.logger.debug(f"SKIPPED: {link} from {url} - Not included in filter '{self.include}'")
+                    continue
+                #exclude filter
+                if self.exclude and any(s in link_lower for s in self.exclude):
+                    self.logger.debug(f"SKIPPED: {link} from {url} - Excluded by filter '{self.exclude}'")
+                    continue
+                # resolve and normalize url
+                absolute_url = urljoin(response.url, link)
+                normalized_url = helpers.validate_and_normalize_url(absolute_url)
+                # skip invalid or non-https urls
+                if not normalized_url:
+                    self.logger.debug(f"SKIPPED: {link} from {url} - Invalid or non-HTTPS URL")
+                    continue
+                # skip non-HTML resources
+                if any(normalized_url.lower().endswith(ext) for ext in helpers.NON_HTML_EXTENSIONS):
+                    self.logger.debug(f"SKIPPED: {normalized_url} - Non-HTML resource")
+                    continue
+                # check domain scope
+                parsed_url = urlparse(normalized_url)
+                if self.allowed_domains:
+                    if parsed_url.netloc not in self.allowed_domains:
+                        self.logger.debug(f"SKIPPED: {normalized_url} - Not within domain scope")
+                        continue
+                # skip duplicates
+                if source in self.url_seen[normalized_url]:
+                    continue
+                try:
+                    yield response.follow(
+                        normalized_url, 
+                        callback=self.parse, 
+                        headers={'Referer': url}
+                        )
+                except Exception as e:
+                    self.logger.error(f"SKIPPED: {normalized_url} - Malformed URL or error: {str(e)}")
 
     def spider_closed(self, spider):
         """

@@ -4,20 +4,23 @@ import argparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from spiderfarm.spiders.linkspider import LinkSpider
+from spiderfarm.spiders.schemaspider import SchemaSpider
 import helpers
 
 def init_menu(args, spider_class, include, exclude):
     settings = get_project_settings()
-    # pass default link tag+attr values for link crawling only
-    tag = args.tag # default 'a'
-    attr = args.attr # default 'href'
-    ctag = args.ctag # content tag target class or ID, format must be 'div.<class>' for classes or 'div#<ID>' for IDs, <div> or <span> tags
+    # pass default link tag+attr values for link crawling process
+    tag = args.tag
+    attr = args.attr
+    # content tag target class or ID, format must be 'div.<class>' for classes or 'div#<ID>' for IDs, <div> or <span> tags
+    ctag = args.ctag
     depth = args.depth
     log_level = args.log.upper()
     include = args.include
     exclude = args.exclude
     auto = args.auto
     output = args.output
+    crawl_enabled = args.crawl
     print(helpers.info_message)
     url_input = input("Enter the starting URL: ").strip()
     if not helpers.validate_and_normalize_url(url_input):
@@ -69,12 +72,13 @@ def init_menu(args, spider_class, include, exclude):
           #f"Tag: {tag}\n"
           #f"Attribute: {attr}\n"
           f"Container Tag: {ctag}\n"
+          f"Crawl Enabled: {crawl_enabled}\n"
           f"Crawl Depth: {depth}\n"
           f"Log Level: {log_level}\n")
     input("Press Enter to start the crawl with the above settings...")
-    process_crawl(settings, spider_class, url_input, tag, attr, ctag, include, exclude, auto=auto, output=output, )
+    process_crawl(settings, spider_class, url_input, tag, attr, ctag, include, exclude, auto=auto, output=output, crawl_enabled=crawl_enabled)
 
-def process_crawl(settings, spider_class, start_url, tag, attr, ctag, include, exclude, auto=None, output=None):
+def process_crawl(settings, spider_class, start_url, tag, attr, ctag, include, exclude, auto=None, output=None, crawl_enabled=False):
     """
     Process the crawl with the given settings and spider parameters.
     """
@@ -100,23 +104,44 @@ def process_crawl(settings, spider_class, start_url, tag, attr, ctag, include, e
         ctag=ctag,
         include=include,
         exclude=exclude,
+        crawl_enabled=crawl_enabled
     )
     process.start()
 
 def main():
-    spider_class = LinkSpider
     parser = argparse.ArgumentParser(description="Recursive Link Spider with Scrapy by JDT")
-    parser.add_argument('--url', default=None, help='Starting URL to crawl')
+    parser.add_argument('--spider', 
+                        choices=['link','schema'], default='link', 
+                        help="Deploy a specific spider: 'link' for LinkSpider, 'schema' for SchemaSpider (default: 'link')")
+    parser.add_argument('--crawl', action='store_true', 
+                        help="Enable link crawling (default is False for Schemaspider, True for Linkspider)")
+    parser.add_argument('--url', default=None, help="Starting URL to crawl")
     parser.add_argument('--tag', default='a', help='HTML tag to search for links (default: "a")')
     parser.add_argument('--attr', default='href', help='Attribute containing the link (default: "href")')
-    parser.add_argument('--ctag', default=None, help='Optional container tag with class or ID (e.g. div.article)')
-    parser.add_argument('--depth', type=int, default=2, help='Crawl depth limit (0 means unlimited, default is 2)')
-    parser.add_argument('--log', default='INFO', help='Logging level (default: INFO)') # opts: NONE, DEBUG, INFO, WARNING, ERROR, CRITICAL
-    parser.add_argument('--include', default=None, help='Only include links that contain one or more comma-separated substrings (case-insensitive)')
-    parser.add_argument('--exclude', default=None, help='Exclude links that contain one or more comma-separated substrings (case-insensitive)')
-    parser.add_argument('--auto', choices=['save', 'view'], help="Auto output mode: 'save' to export CSV, 'view' to show table")
-    parser.add_argument('--output', default=None, help='Optional filename (without extension) for CSV output')
+    parser.add_argument('--ctag', default=None, help="Optional container tag with class or ID (e.g. div.article)")
+    parser.add_argument('--depth', type=int, default=2, help="Crawl depth limit (0 means unlimited, default is 2)")
+    parser.add_argument('--log', 
+                        default='INFO', 
+                        help='Logging level (default: INFO)') # opts: NONE, DEBUG, INFO, WARNING, ERROR, CRITICAL
+    parser.add_argument('--include', 
+                        default=None, 
+                        help='Only include links that contain one or more comma-separated substrings (case-insensitive)')
+    parser.add_argument('--exclude', 
+                        default=None, 
+                        help='Exclude links that contain one or more comma-separated substrings (case-insensitive)')
+    parser.add_argument('--auto', 
+                        choices=['save', 'view'], 
+                        help="Auto output mode: 'save' to export CSV, 'view' to show table")
+    parser.add_argument('--output', 
+                        default=None, 
+                        help='Optional filename (without extension) for CSV output')
     args = parser.parse_args()
+    SPIDER_MAP = {
+        'link': LinkSpider,
+        'schema': SchemaSpider,
+    }
+    spider_class = SPIDER_MAP[args.spider]
+    print(f"Deploying {spider_class}...")
     include = [s.strip().lower() for s in args.include.split(',')] if args.include else []
     exclude = [s.strip().lower() for s in args.exclude.split(',')] if args.exclude else []
     depth = args.depth
@@ -139,7 +164,19 @@ def main():
         if not helpers.validate_and_normalize_url(args.url):
             print("Invalid URL - please enter a valid URL starting with http:// or https://")
             return
-        process_crawl(settings, spider_class, args.url, args.tag, args.attr, args.ctag, include, exclude, args.auto, args.output)
+        process_crawl(
+            settings, 
+            spider_class, 
+            args.url, 
+            args.tag, 
+            args.attr, 
+            args.ctag, 
+            include, 
+            exclude, 
+            args.auto, 
+            args.output, 
+            args.crawl,
+            )
 
 if __name__ == '__main__':
     main()
