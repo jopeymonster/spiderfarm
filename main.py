@@ -78,7 +78,7 @@ def init_menu(args, spider_class, include, exclude):
     input("Press Enter to start the crawl with the above settings...")
     process_crawl(settings, spider_class, url_input, tag, attr, ctag, include, exclude, auto=auto, output=output, crawl_enabled=crawl_enabled)
 
-def process_crawl(settings, spider_class, start_url, tag, attr, ctag, include, exclude, auto=None, output=None, crawl_enabled=False):
+def process_crawl(settings, spider_class, start_urls, tag, attr, ctag, include, exclude, auto=None, output=None, crawl_enabled=False):
     """
     Process the crawl with the given settings and spider parameters.
     """
@@ -98,7 +98,7 @@ def process_crawl(settings, spider_class, start_url, tag, attr, ctag, include, e
     process = CrawlerProcess(settings)
     process.crawl(
         spider_class,
-        start_url=start_url,
+        start_urls=start_urls,
         tag=tag,
         attr=attr,
         ctag=ctag,
@@ -161,20 +161,21 @@ def main():
     if args.url is None:
         init_menu(args, spider_class, include, exclude)
     else:
-        if not helpers.validate_and_normalize_url(args.url):
+        start_urls = [u.strip() for u in args.url.split(',') if helpers.validate_and_normalize_url(u.strip())]
+        if not start_urls:
             print("Invalid URL - please enter a valid URL starting with http:// or https://")
             return
         process_crawl(
             settings, 
             spider_class, 
-            args.url, 
-            args.tag, 
-            args.attr, 
-            args.ctag, 
-            include, 
-            exclude, 
-            args.auto, 
-            args.output, 
+            start_urls, 
+            args.tag,
+            args.attr,
+            args.ctag,
+            include,
+            exclude,
+            args.auto,
+            args.output,
             args.crawl,
             )
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # spiderfarm/spiderfarm/spiders/linkspider.py
 import scrapy
 from scrapy import signals
@@ -10,26 +11,28 @@ class LinkSpider(scrapy.Spider):
     custom_settings = {}
     handle_httpstatus_list = [404]
     
-    def __init__(self, start_url=None, tag='a', attr='href', 
+    def __init__(self, start_urls=None, tag='a', attr='href', 
                  ctag=None, include=None, exclude=None, crawl_enabled=True,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.start_urls = [start_url]
+        self.start_urls = [start_urls] if isinstance(start_urls, str) else start_urls or []
         self.tag = tag
         self.attr = attr
         self.ctag = ctag
         self.url_seen = defaultdict(set)  # url -> set of sources
         self.scraped_data = [] # list to store scraped data
-        if start_url:
-            parsed = urlparse(start_url)
-            domain = parsed.netloc
-            self.allowed_domains = [domain]
-            if domain.startswith('www.'):
-                self.allowed_domains.append(domain.replace('www.', ''))
         self.include = include or []
         self.exclude = exclude or []
         self.crawl_enabled = crawl_enabled
-    
+        if self.start_urls:
+            parsed = urlparse(start_urls[0])
+            domain = parsed.netloc
+            self.allowed_domains = [domain]
+            if domain.startswith('www.'):
+                self.allowed_domains.append(domain.replace('www.',''))
+        else:
+            self.allowed_domains = []
+
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = super(LinkSpider, cls).from_crawler(crawler, *args, **kwargs)

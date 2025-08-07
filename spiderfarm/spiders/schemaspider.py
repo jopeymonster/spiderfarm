@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # spiderfarm/spiderfarm/spiders/schemaspider.py
 import scrapy
 from scrapy import signals
@@ -12,13 +13,13 @@ GTIN_FIELDS = {'gtin','gtin8','gtin12','gtin13','gtin14'}
 class SchemaSpider(scrapy.Spider):
     name = 'schemaspider'
     custom_settings = {}
-    handle_httpstatus_list = [404]
+    handle_httpstatus_list = [404,429]
 
-    def __init__(self, start_url=None, tag='a', attr='href', 
+    def __init__(self, start_urls=None, tag='a', attr='href', 
                  ctag=None, include=None, exclude=None, crawl_enabled=False, 
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.start_urls = [start_url] if isinstance(start_url, str) else start_url or []
+        self.start_urls = [start_urls] if isinstance(start_urls, str) else start_urls or []
         parsed_domain = urlparse(self.start_urls[0])
         self.allowed_domains = [parsed_domain.netloc.replace('www.','')]
         self.tag = tag
@@ -30,6 +31,11 @@ class SchemaSpider(scrapy.Spider):
         self.processed_json_ids = set()
         self.results = []
         self.crawl_enabled = crawl_enabled
+        if self.start_urls:
+            parsed_domain = urlparse(self.start_urls[0])
+            self.allowed_domains = [parsed_domain.netloc.replace('www.','')]
+        else:
+            self.allowed_domains = []
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
