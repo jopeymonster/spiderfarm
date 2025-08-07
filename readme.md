@@ -20,26 +20,33 @@ A collection of spiders using the [Scrapy](https://scrapy.org) web crawling fram
 ![Scrapy](https://img.shields.io/badge/Built%20With-Scrapy-brightgreen.svg)
 ![CLI Tool](https://img.shields.io/badge/CLI-Enabled-orange.svg)
 
+Now featuring **'SchemaSpider'** - a schema discovery spider for extracting structured data
+
 ### LinkSpider
 
 A configuable web crawler designed for link discovery and cataloging.
 
-* **Recursive crawling** with optional crawl depth
+* **Recursive crawling option** with custom set crawl depth including infinite depth discovery
 * **Targeted link discovery** by specifying HTML tag and attribute (e.g., `a[href]`, `link[href]`, etc.)
 * **Scoped content extraction** using container tags like `div.article` or `div#main`
 * **Include / Exclude filtering** for links based on substrings (e.g., only crawl URLs containing `nike`, exclude those with `sale`)
 * **Metadata extraction** from each page (`title`, `meta description`, `canonical link`)
+* **Non-HTML resource filtering** (skips images, PDFs, scripts, etc.)
+* **Safe and unique filename generation** using timestamp and seed URL
 * **Duplicate-awareness** avoids re-processing links from the same source page
 * **Domain-restricted crawling** to seed domain and subdomains only
 * **CSV export** or terminal table view of crawl results
 * **CLI interface** with options for automation, logging level, and filename customization
-* **Non-HTML resource filtering** (skips images, PDFs, scripts, etc.)
-* **Safe and unique filename generation** using timestamp and seed URL
+
+### SchemaSpider
+All the same great features as **LinkSpider** as well as:
+
+* **Schema**
 
 ## Usage
 
 ```bash
-python main.py --url https://example.com \
+python main.py --url "https://example.com" \
                --tag a \
                --attr href \
                --ctag div#main \
@@ -55,7 +62,7 @@ python main.py --url https://example.com \
 
 | Option      | Description                                                                   | Default      |
 | ----------- | ----------------------------------------------------------------------------- | ------------ |
-| `--url`     | Starting URL to crawl                                                         | *(required)* |
+| `--url`     | Starting URL to crawl (Wrap URL link with "" or '')                           | *(required)* |
 | `--tag`     | HTML tag to search for (`a`, `link`, etc.)                                    | `a`          |
 | `--attr`    | Attribute from which to extract links                                         | `href`       |
 | `--ctag`    | Optional container tag selector (`div.article`, `div#main`)                   | *(optional)* |

@@ -132,5 +132,6 @@ class LinkSpider(scrapy.Spider):
             auto_view=auto_view, 
             auto_save=auto_save,
             output_filename=output_filename,
-            seed_url=self.start_urls[0] if self.start_urls else None
+            seed_url=self.start_urls[0] if self.start_urls else None,
+            spider_name=self.name
         )
