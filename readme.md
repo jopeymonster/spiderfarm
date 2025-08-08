@@ -131,7 +131,8 @@ This project is licensed under the [MIT License](LICENSE).
 This project uses:
 
 * [Scrapy](https://scrapy.org) — BSD 3-Clause License
-* [Scrapy-Playwright](https://github.com/scrapy-plugins/scrapy-playwright) — MIT License
+* [Playwright, for Python](https://github.com/microsoft/playwright-python) - Apache License 2.0
+* [Scrapy-Playwright](https://github.com/scrapy-plugins/scrapy-playwright) — BSD 3-Clause License
 
 See [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) for full text.
 
