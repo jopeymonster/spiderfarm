@@ -10,6 +10,7 @@ import os
 import pydoc
 from datetime import datetime
 from tabulate import tabulate
+from scrapy_playwright.page import PageMethod
 
 NON_HTML_EXTENSIONS = (
         '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.pdf', '.doc', 
@@ -48,6 +49,17 @@ def validate_and_normalize_url(url):
     if parsed.scheme not in ('http', 'https') or not parsed.netloc:
         return None
     return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+# playwright
+def playwright_meta(url):
+    return {
+        "playwright": True,
+        "playwright_include_page": True,
+        "playwright_page_methods": [
+            PageMethod("goto", url, wait_until="domcontentloaded", timeout=60000)
+        ],
+        "playwright_context": "default",
+    }
 
 # xpath conversion
 def get_container_xpath(obj):

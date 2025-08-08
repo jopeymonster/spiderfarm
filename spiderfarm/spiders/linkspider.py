@@ -9,7 +9,7 @@ import helpers
 class LinkSpider(scrapy.Spider):
     name = 'linkspider'
     custom_settings = {}
-    handle_httpstatus_list = [404]
+    handle_httpstatus_list = [403,404,429]
     
     def __init__(self, start_urls=None, tag='a', attr='href', 
                  ctag=None, include=None, exclude=None, crawl_enabled=True,
@@ -39,10 +39,23 @@ class LinkSpider(scrapy.Spider):
         crawler.signals.connect(spider.spider_closed, signals.spider_closed)
         return spider
 
+    async def start(self):
+        for url in self.start_urls:
+            yield scrapy.Request(
+                url,
+                callback=self.parse,
+                meta=helpers.playwright_meta(url),
+                headers={
+                    "Referer":"https://www.google.com/",
+                },
+                )
+
     def parse(self, response):
         url = response.url
         if response.status == 403:
-            self.logger.warning(f"BLOCKED: 403 at {response.url}")
+            self.logger.warning(f"BLOCKED: 403 at {url}")
+            self.logger.debug(f"RESPONSE HEADERS: \n{response.headers}")
+            self.logger.debug(f"RESPONSE BODY: \n{response.text[:5000]}")
             return
         source = response.request.headers.get('Referer', b'[seed]').decode()
         if source in self.url_seen[url]:
@@ -57,7 +70,7 @@ class LinkSpider(scrapy.Spider):
             'title': response.xpath('//title/text()').get(default='').strip(),
             'meta_description': response.xpath("//meta[@name='description']/@content").get(default='').strip(),
             'canonical': response.xpath("//link[@rel='canonical']/@href").get(default='').strip(),
-            'source': source
+            'source': source,
         }
         self.scraped_data.append(page_info)
         yield page_info
@@ -107,7 +120,8 @@ class LinkSpider(scrapy.Spider):
                     yield response.follow(
                         normalized_url, 
                         callback=self.parse, 
-                        headers={'Referer': url}
+                        headers={'Referer': url},
+                        meta=helpers.playwright_meta(url), # include pw in recursive crawls
                         )
                 except Exception as e:
                     self.logger.error(f"SKIPPED: {normalized_url} - Malformed URL or error: {str(e)}")
@@ -139,5 +153,5 @@ class LinkSpider(scrapy.Spider):
             auto_save=auto_save,
             output_filename=output_filename,
             seed_url=self.start_urls[0] if self.start_urls else None,
-            spider_name=self.name
+            spider_name=self.name,
         )

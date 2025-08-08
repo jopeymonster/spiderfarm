@@ -2,10 +2,11 @@
 # spiderfarm/spiderfarm/spiders/schemaspider.py
 import scrapy
 from scrapy import signals
+from collections import defaultdict
 import json
 from urllib.parse import urlparse, urljoin
-from collections import defaultdict
 import helpers
+from helpers import playwright_meta
 
 TARGET_TYPES = {'Offer','Product','ProductGroup','SomeProducts','IndividualProduct','ProductCollection','ItemList','ListItem'}
 GTIN_FIELDS = {'gtin','gtin8','gtin12','gtin13','gtin14'}
@@ -13,7 +14,7 @@ GTIN_FIELDS = {'gtin','gtin8','gtin12','gtin13','gtin14'}
 class SchemaSpider(scrapy.Spider):
     name = 'schemaspider'
     custom_settings = {}
-    handle_httpstatus_list = [404,429]
+    handle_httpstatus_list = [403,404,429]
 
     def __init__(self, start_urls=None, tag='a', attr='href', 
                  ctag=None, include=None, exclude=None, crawl_enabled=False, 
@@ -43,10 +44,23 @@ class SchemaSpider(scrapy.Spider):
         crawler.signals.connect(spider.spider_closed, signals.spider_closed)
         return spider
 
+    async def start(self):
+        for url in self.start_urls:
+            yield scrapy.Request(
+                url,
+                callback=self.parse,
+                meta=helpers.playwright_meta(url),
+                headers={
+                    "Referer":"https://www.google.com/",
+                },
+                )
+    
     def parse(self, response):
         current_url = response.url
         if response.status == 403:
             self.logger.warning(f"BLOCKED: 403 at {current_url}")
+            self.logger.debug(f"RESPONSE HEADERS: \n{response.headers}")
+            self.logger.debug(f"RESPONSE BODY: \n{response.text[:5000]}")
             return
         if current_url in self.visited_urls:
             return
@@ -83,7 +97,11 @@ class SchemaSpider(scrapy.Spider):
                     continue
                 if not self.is_valid_link(normalized_url):
                     continue
-                yield scrapy.Request(normalized_url, callback=self.parse)
+                yield scrapy.Request(
+                    url=normalized_url,
+                    callback=self.parse,
+                    meta=helpers.playwright_meta(normalized_url), # include pw in recursive crawls
+                )
 
     def extract_target_data(self, obj, source_url):
         if '@type' not in obj:
@@ -103,7 +121,7 @@ class SchemaSpider(scrapy.Spider):
                 'price': '',
                 'gtin': '',
                 'source': source_url,
-                'type': 'ItemList'
+                'type': 'ItemList',
             })
             for item in obj['itemListElement']:
                 if isinstance(item,dict):
@@ -115,7 +133,7 @@ class SchemaSpider(scrapy.Spider):
                             'price': '',
                             'gtin': '',
                             'source': source_url,
-                            'type': 'ListItem'
+                            'type': 'ListItem',
                         })
             return
         # extract ProductGroup
@@ -170,7 +188,7 @@ class SchemaSpider(scrapy.Spider):
                 'price': price,
                 'gtin': gtin,
                 'source': source_url,
-                'type': ','.join(types)
+                'type': ','.join(types),
             })
 
     def extract_price(self, obj):
@@ -195,7 +213,7 @@ class SchemaSpider(scrapy.Spider):
         parts = [
             obj.get('name','').strip().lower(),
             self.extract_gtin(obj) or '',
-            obj.get('url','').strip().lower()
+            obj.get('url','').strip().lower(),
         ]
         return '|'.join(parts)
 
@@ -229,7 +247,7 @@ class SchemaSpider(scrapy.Spider):
             r.get('price',''),
             r.get('gtin',''),
             r.get('source',''),
-            r.get('type','')
+            r.get('type',''),
         ] for r in self.results]
         auto_view = self.settings.getbool('AUTO_VIEW',False)
         auto_save = self.settings.getbool('AUTO_SAVE',False)
@@ -241,5 +259,5 @@ class SchemaSpider(scrapy.Spider):
             auto_save=auto_save,
             output_filename=output_filename,
             seed_url=self.start_urls[0] if self.start_urls else None,
-            spider_name=self.name
+            spider_name=self.name,
         )

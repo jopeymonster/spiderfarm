@@ -5,6 +5,7 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from spiderfarm.spiders.linkspider import LinkSpider
 from spiderfarm.spiders.schemaspider import SchemaSpider
+import scrapy_playwright
 import helpers
 
 def init_menu(args, spider_class, include, exclude):

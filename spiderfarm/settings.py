@@ -14,24 +14,46 @@ NEWSPIDER_MODULE = "spiderfarm.spiders"
 
 ADDONS = {}
 
+# playwright integration; these can be moved to main and overrided as need with args
+DOWNLOAD_HANDLERS = {
+    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+}
+TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+PLAYWRIGHT_BROWSER_TYPE = "chromium"
+PLAYWRIGHT_LAUNCH_OPTIONS = {"headless": True}  # false if debugging with browser
+# enable cookies for pw context
+PLAYWRIGHT_CONTEXTS = {
+    "default":{
+        "locale": "en-us",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115 Safari/537.36",
+        "java_script_enabled": True,
+    }
+}
+# optional: default timeout for pages
+PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 30_000  # in millisecs
+# optional: limit concurrency to avoid bans
+PLAYWRIGHT_MAX_CONTEXTS = 4
+
+
 """
 Crawl responsibly by identifying yourself (and your website) on the user-agent
 Format:
 #USER_AGENT = "spiderfarm (+http://www.yourdomain.com)"
 """
 # default/generic ua
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36-X"
+#USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36-X"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Concurrency and throttling settings
 #CONCURRENT_REQUESTS = 16
 CONCURRENT_REQUESTS_PER_DOMAIN = 1
-DOWNLOAD_DELAY = 1
+DOWNLOAD_DELAY = 2.5
 
 # Disable cookies (enabled by default)
-COOKIES_ENABLED = False
+# COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 TELNETCONSOLE_ENABLED = False
