@@ -41,6 +41,9 @@ class LinkSpider(scrapy.Spider):
 
     def parse(self, response):
         url = response.url
+        if response.status == 403:
+            self.logger.warning(f"BLOCKED: 403 at {response.url}")
+            return
         source = response.request.headers.get('Referer', b'[seed]').decode()
         if source in self.url_seen[url]:
             self.logger.debug(f"SKIPPED: Duplicate {url} from same source {source}")

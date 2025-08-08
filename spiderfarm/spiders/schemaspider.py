@@ -45,6 +45,9 @@ class SchemaSpider(scrapy.Spider):
 
     def parse(self, response):
         current_url = response.url
+        if response.status == 403:
+            self.logger.warning(f"BLOCKED: 403 at {current_url}")
+            return
         if current_url in self.visited_urls:
             return
         self.visited_urls.add(current_url)
