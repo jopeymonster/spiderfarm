@@ -54,7 +54,7 @@ A configurable web crawler for link discovery and cataloging.
 Everything in **LinkSpider**, plus:
 
 * **Automatic Schema.org structured data extraction**:
-  - Supports `JSON-LD`, COMING SOON = `Microdata`, and `RDFa`.
+  - Supports `JSON-LD`, `Microdata`, and `RDFa`.
   - Normalizes schema output for analysis.
 * **Playwright-powered schema crawling**:
   - Loads JavaScript-heavy pages to reveal client-side schema markup.
@@ -79,3 +79,65 @@ python main.py --url "https://example.com" \
                --output my_links \
                --include nike,adidas \
                --exclude sale,outlet
+````
+
+### **SchemaSpider with Playwright**
+
+```bash
+python main.py --spider schema \
+               --url "https://example.com/product/123" \
+               --crawl \
+               --depth 2 \
+               --auto view \
+               --log DEBUG
+```
+
+This will:
+
+1. Launch **SchemaSpider**.
+2. Use **Playwright** to render JavaScript.
+3. Recursively extract schema data up to depth 2.
+4. Display results in the terminal.
+
+---
+
+### Available CLI Options
+
+| Option      | Description                                                            | Default      |
+| ----------- | ---------------------------------------------------------------------- | ------------ |
+| `--spider`  | Choose spider: `link` (default) or `schema`                            | `link`       |
+| `--crawl`   | Enable recursive crawling (honors depth)                               | *(optional)* |
+| `--url`     | Starting URL (wrap in quotes)                                          | *(required)* |
+| `--tag`     | HTML tag to search for (`a`, `link`, etc.)                             | `a`          |
+| `--attr`    | Attribute from which to extract links                                  | `href`       |
+| `--ctag`    | Optional container tag selector (`div.article`, `div#main`)            | *(optional)* |
+| `--depth`   | Maximum crawl depth (`0` = infinite)                                   | `2`          |
+| `--log`     | Log verbosity: `NONE`, `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` | `INFO`       |
+| `--auto`    | Auto output mode: `save` (CSV), `view` (table), or omit to be prompted | *(optional)* |
+| `--output`  | Custom output filename (no extension)                                  | *(optional)* |
+| `--include` | Comma-separated values that must appear in URL                         | *(optional)* |
+| `--exclude` | Comma-separated values to exclude from URL                             | *(optional)* |
+
+---
+
+## Licenses
+
+This project is licensed under the [MIT License](LICENSE).
+
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+### Third-Party Licenses
+
+This project uses:
+
+* [Scrapy](https://scrapy.org) — BSD 3-Clause License
+* [Scrapy-Playwright](https://github.com/scrapy-plugins/scrapy-playwright) — MIT License
+
+See [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) for full text.
+
+---
+
+## Contact
+
+* Joe Thompson (@jopeymonster)
+* [https://github.com/jopeymonster](https://github.com/jopeymonster)
