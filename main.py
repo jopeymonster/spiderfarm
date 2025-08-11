@@ -5,6 +5,7 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from spiderfarm.spiders.linkspider import LinkSpider
 from spiderfarm.spiders.schemaspider import SchemaSpider
+from spiderfarm.spiders.xmlspider import XMLSpider
 import scrapy_playwright
 import helpers
 
@@ -112,7 +113,7 @@ def process_crawl(settings, spider_class, start_urls, tag, attr, ctag, include, 
 def main():
     parser = argparse.ArgumentParser(description="Recursive Link Spider with Scrapy by JDT")
     parser.add_argument('--spider', 
-                        choices=['link','schema'], default='link', 
+                        choices=['link','schema','xml'], default='link', 
                         help="Deploy a specific spider: 'link' for LinkSpider, 'schema' for SchemaSpider (default: 'link')")
     parser.add_argument('--crawl', action='store_true', 
                         help="Enable link crawling (default is False for Schemaspider, True for Linkspider)")
@@ -140,6 +141,7 @@ def main():
     SPIDER_MAP = {
         'link': LinkSpider,
         'schema': SchemaSpider,
+        'xml': XMLSpider,
     }
     spider_class = SPIDER_MAP[args.spider]
     print(f"Deploying {spider_class}...")
