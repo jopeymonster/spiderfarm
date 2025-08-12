@@ -34,7 +34,7 @@ A collection of spiders built on the [Scrapy](https://scrapy.org) framework, des
 - Reference the below links for installing and setting **Playwright for Python** up for use in **Scrapy**:
   - [Microsoft Playwright](https://github.com/microsoft/playwright)
   - [Playwright for Python](https://playwright.dev/python/docs/intro)
-  - [Scrapy-Plywright](https://github.com/scrapy-plugins/scrapy-playwright)
+  - [Scrapy-Playwright](https://github.com/scrapy-plugins/scrapy-playwright)
 
 ---
 
@@ -135,19 +135,18 @@ python main.py --spider schema \
 
 ## Licenses
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 This project is licensed under the [MIT License](LICENSE).
-
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ### Third-Party Licenses
 
 This project uses:
 
-* [Scrapy](https://scrapy.org) — BSD 3-Clause License
-* [Playwright, for Python](https://github.com/microsoft/playwright-python) - Apache License 2.0
-* [Scrapy-Playwright](https://github.com/scrapy-plugins/scrapy-playwright) — BSD 3-Clause License
+* [Scrapy](https://scrapy.org) — [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](BSD 3-Clause License)
+* [Playwright, for Python](https://github.com/microsoft/playwright-python) - [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](Apache License 2.0)
+* [Scrapy-Playwright](https://github.com/scrapy-plugins/scrapy-playwright) — [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](BSD 3-Clause License)
 
-See [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) for full text.
+See [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES.md) for full text and license source links.
 
 ---
 
