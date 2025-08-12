@@ -142,11 +142,11 @@ This project is licensed under the [MIT License](LICENSE).
 
 This project uses:
 
-* [Scrapy](https://scrapy.org) — ![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)
-* [Playwright, for Python](https://github.com/microsoft/playwright-python) - ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
-* [Scrapy-Playwright](https://github.com/scrapy-plugins/scrapy-playwright) — ![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)(BSD 3-Clause License)
+* [Scrapy](https://scrapy.org)
+* [Playwright, for Python](https://github.com/microsoft/playwright-python)
+* [Scrapy-Playwright](https://github.com/scrapy-plugins/scrapy-playwright)
 
-See [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES.md) for full text and license source links.
+See [Third Party Licenses](THIRD_PARTY_LICENSES.md) for full text and license source links.
 
 ---
 
