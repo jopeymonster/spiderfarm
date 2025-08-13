@@ -32,8 +32,7 @@ class XMLSpider(scrapy.Spider):
                 self.url_seen.add(loc)
                 yield scrapy.Request(loc, callback=self.parse_status, headers={'Referer': response.url})
                 count+=1
-                if count % 250 == 0:
-                    self.logger.info("PROCESSED %d <url> nodes...",count)
+        self.logger.info("DISCOVERED %d <url> nodes...",count)
 
     def parse_status(self, response):
         self.scraped_data.append({'url': response.url, 'status': response.status})
