@@ -154,3 +154,12 @@ See [Third Party Licenses](THIRD_PARTY_LICENSES.md) for full text and license so
 
 * Joe Thompson (@jopeymonster)
 * [https://github.com/jopeymonster](https://github.com/jopeymonster)
+
+---
+
+## Legal Notice
+
+The developers and contributors of this application, and all logic found within, are not responsible for actions taken using this application or services.
+
+Your privacy is respected when using our products and our **Privacy Policy** can be found here:
+[https://jopeymonster.github.io/privacy/](https://jopeymonster.github.io/privacy/)
