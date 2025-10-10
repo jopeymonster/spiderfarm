@@ -81,7 +81,7 @@ Everything in **LinkSpider**, plus:
 ### *XMLSpider*
 ```bash
 python main.py --spider xml \
-               --url "https://exmaple.com/sitemap.xml" \
+               --url "https://example.com/sitemap.xml" \
                --auto save \
                --output my_sitemap \
                --log info
