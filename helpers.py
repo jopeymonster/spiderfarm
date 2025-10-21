@@ -75,6 +75,18 @@ def get_container_xpath(obj):
     else:
         return f'//{obj.ctag}'
 
+# value/fields transformations
+def clean_value(self, value: str) -> str:
+    """Remove CDATA and other wrappers; trim and truncate."""
+    if not value:
+        return ""
+    value = value.strip()
+    if value.startswith("<![CDATA[") and value.endswith("]]>"):
+        value = value[9:-3].strip()
+    if len(value) > 30:
+        value = value[:30]
+    return value
+
 # filename handling
 def sanitize_filename(name):
     """

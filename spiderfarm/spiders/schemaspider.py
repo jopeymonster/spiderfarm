@@ -2,11 +2,9 @@
 # spiderfarm/spiderfarm/spiders/schemaspider.py
 import scrapy
 from scrapy import signals
-from collections import defaultdict
 import json
 from urllib.parse import urlparse, urljoin
 import helpers
-from helpers import playwright_meta
 
 TARGET_TYPES = {'Offer','Product','ProductGroup','SomeProducts','IndividualProduct','ProductCollection','ItemList','ListItem'}
 GTIN_FIELDS = {'gtin','gtin8','gtin12','gtin13','gtin14'}

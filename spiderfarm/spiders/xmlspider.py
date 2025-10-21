@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 # spiderfarm/spiderfarm/spiders/xmlspider.py
 import scrapy
-from scrapy.spiders import XMLFeedSpider
 from scrapy import signals
-from urllib.parse import urlparse
-from collections import defaultdict
 import helpers
 
 class XMLSpider(scrapy.Spider):
