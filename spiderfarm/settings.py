@@ -20,8 +20,11 @@ DOWNLOAD_HANDLERS = {
     "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
 }
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
-PLAYWRIGHT_BROWSER_TYPE = "chromium"
-PLAYWRIGHT_LAUNCH_OPTIONS = {"headless": True}  # false if debugging with browser
+PLAYWRIGHT_BROWSER_TYPE = "firefox"
+PLAYWRIGHT_LAUNCH_OPTIONS = {
+    "headless": False, # false if debugging with browser
+    "timeout": 10000
+    } 
 # enable cookies for pw context
 PLAYWRIGHT_CONTEXTS = {
     "default":{
@@ -31,7 +34,7 @@ PLAYWRIGHT_CONTEXTS = {
     }
 }
 # optional: default timeout for pages
-PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 30_000  # in millisecs
+PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 10000  # in millisecs
 # optional: limit concurrency to avoid bans
 PLAYWRIGHT_MAX_CONTEXTS = 4
 
@@ -65,7 +68,7 @@ TELNETCONSOLE_ENABLED = False
 #}
 
 DEFAULT_REQUEST_HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115 Safari/537.36-X',
+    'User-Agent': None,
     'Accept-Language': 'en-US,en;q=0.9',
     'Accept-Encoding': 'gzip, deflate, br',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
