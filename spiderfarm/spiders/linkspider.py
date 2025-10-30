@@ -25,7 +25,7 @@ class LinkSpider(scrapy.Spider):
         self.exclude = exclude or []
         self.crawl_enabled = crawl_enabled
         if self.start_urls:
-            parsed = urlparse(start_urls[0])
+            parsed = urlparse(self.start_urls[0])
             domain = parsed.netloc
             self.allowed_domains = [domain]
             if domain.startswith('www.'):

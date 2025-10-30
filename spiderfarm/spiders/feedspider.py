@@ -52,7 +52,7 @@ class FeedSpider(scrapy.Spider):
                     tag_name = tag_name.split("}", 1)[1]
                 if tag_name == "additional_image_link":
                     continue
-                text = helpers.clean_value(child.text)
+                text = helpers.clean_value(self, value=child.text if child.text is not None else "")
                 row[tag_name] = text
 
             if row:
